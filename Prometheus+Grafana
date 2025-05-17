@@ -2,3 +2,61 @@ what is prometheus:
 prometheus is an open source monitoring and alerting tool designed for reliebility and scalability:
 
 Architecture:
+so besically prometheus follows pull based architecture where its first component is 
+
+1) prometheus server :
+its a central componant & heart of prometheus which besically collect matrix from exporter and stores it in time-series-database(TSD) 
+
+2) Exporter:
+exporter is a small program that collects matrix from a system or application and makes them available in a format that prometheus can understand.
+we can have n number of exporter but each exporter will be responsible for specific system,service,node 
+like for node matrix = node exporter
+like for k8s matrix =  kube-state-matrix >> give info about pod health,pod restart,memory,cpu,how many configmap is created,how many secrets,deployment status
+similarly we can have so many exporter for specific matrix
+we can also have custom matrix
+
+##point  prometheus cannot directly scrap the matrix from system but it rely on exporter (middleman) which collects matrix and expose them via http endpoint(usually /matrix)
+and finally prometheus scrap matrix from here
+
+3) Alertmanager :
+
+Sends alerts when something goes wrong. like if cpu goes high or dick space or memory
+
+Can send alerts to Slack, Email, or PagerDuty.
+
+4) Pushgateway (optional)
+Used for short-lived jobs that can’t be scraped (like batch jobs).
+
+These jobs push metrics to the Pushgateway, and Prometheus scrapes from it.
+
+5) Promql:
+PromQL is the query language used to interact with the Prometheus HTTP server. It allows you to retrieve, filter, and aggregate time-series data.
+
+With PromQL, you can:
+
+🔍 Query metrics based on labels (e.g. method="GET")
+
+📆 Define a time range for your data (like last 5 minutes or 1 hour)
+
+📊 Aggregate data (e.g. sum, avg, rate)
+
+📈 Visualize results as graphs (e.g. in Prometheus UI or Grafana)
+
+
+q: what is matrix:
+matrix is historical data of the events to understand the health of the system
+problem with matrix is it is completly raw information (not easy to read)max numerical content
+
+q: how many matrix u have collected
+matrix can be collected as followes:
+cpu of node utilis
+memory
+pod status 
+deployment status
+https request how many in last 30 min
+user signed up 
+hpa replica
+
+
+
+
