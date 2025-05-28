@@ -1,1 +1,15 @@
+EFK (ELASTIC SEARCH + FLUENTBIT + KIBANA)
 
+SO we have deployed fluntbit as daemonset in each node which besically collects the logs from applications/node (/var/pod/log and forward it to elastic search
+elastic search which act as a centralized log store and kibana which visualize those logs from elasticsearch.
+
+first deploy elastic search within eks as statefulset application with iam role with service account for dynamically provission the ebs volume,get secrets of it
+make sure to install ebs csi (addons) with eksctl create addon --cluser clustername 
+
+then 
+
+install kibana with helm 
+
+then finally
+
+install fluentbit with helm provide the secret here of elastic search bcz it needs to be authenticate with es to forward the logs
