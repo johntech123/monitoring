@@ -58,5 +58,62 @@ user signed up
 hpa replica
 
 
+✅ kube-state-metrics
+📍 Purpose: Exposes Kubernetes resource states/metadata — not real-time performance.
+
+🟢 Exposes:
+
+Pod status (Running, Pending, Failed)
+Pod restart counts (kube_pod_container_status_restarts_total)
+Deployment status (kube_deployment_status_*)
+Node conditions (kube_node_status_condition)
+PVC phase (kube_persistentvolumeclaim_status_phase)
+Namespace status
+Service spec type (kube_service_spec_type)
+ConfigMap info (kube_configmap_info)
+Secret info (kube_secret_info)
+
+🖥️ Metrics Endpoint:
+
+http://kube-state-metrics-service:8080/metrics
+
+
+
+✅ cAdvisor (Container Advisor)
+📍 Purpose: Real-time container-level resource usage metrics, provided by Kubelet.
+
+🟢 Exposes:
+
+CPU & memory consumption (container_cpu_usage_seconds_total, container_memory_usage_bytes)
+Filesystem usage (storage per container)
+Inode usage (filesystem metadata)
+Container uptime
+Labels/metadata (container name, image, start time, ID)
+
+🖥️ Metrics Endpoint:
+
+http://<nodeIP>:4194/metrics
+
+
+✅ node-exporter
+📍 Purpose: Node-level system metrics — CPU, disk, memory, etc.
+
+cpu and memory 
+filesystem (mounted file system size and usage
+process no.of running/sleeping 
+uptime how long the node is running
+
+🖥️ Metrics Endpoint:
+http//:node-exporter-service:9100/metrics
+
+now thses above metrics are in raw formate which prometheous understand and scrap it which is not human readable thats y we use promql which agregate it filter it provide
+alerting and grafana dashboard for better visualisation.
+
+
+
+
+
+
+
 
 
