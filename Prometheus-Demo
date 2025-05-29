@@ -1,0 +1,48 @@
+eksctl create cluster --name=observability \
+                      --region=us-east-1 \
+                      --zones=us-east-1a,us-east-1b \
+                      --without-nodegroup
+                      
+
+eksctl utils associate-iam-oidc-provider \
+    --region us-east-1 \
+    --cluster observability \
+    --approve
+
+
+eksctl create nodegroup --cluster=observability \
+                        --region=us-east-1 \
+                        --name=observability-ng-private \
+                        --node-type=t3.medium \
+                        --nodes-min=2 \
+                        --nodes-max=3 \
+                        --node-volume-size=20 \
+                        --managed \
+                        --asg-access \
+                        --external-dns-access \
+                        --full-ecr-access \
+                        --appmesh-access \
+                        --alb-ingress-access \
+                        --node-private-networking
+
+# Update ./kube/config file
+aws eks update-kubeconfig --name observability
+
+
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+
+kubectl create ns monitoring
+
+cd day-2
+
+helm install monitoring prometheus-community/kube-prometheus-stack \
+-n monitoring \
+-f ./custom_kube_prometheus_stack.yml
+
+nohup kubectl port-forward svc/prometheus-operated -n monitoring 9090:9090 > /dev/null 2>&1 &      SO THAT IT CAN RUN IN BACKGROUND
+nohup kubectl port-forward svc/monitoring-grafana -n monitoring 8080:80 > /dev/null 2>&1 &
+
+
