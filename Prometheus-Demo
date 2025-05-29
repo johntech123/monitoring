@@ -46,3 +46,14 @@ nohup kubectl port-forward svc/prometheus-operated -n monitoring 9090:9090 > /de
 nohup kubectl port-forward svc/monitoring-grafana -n monitoring 8080:80 > /dev/null 2>&1 &
 
 
+do kubectl get svc        you will get services like grafana alertmanager or prometheous 
+pick ip or exporter and port number 
+go inside node by session manager
+do curl ip:port/metrics              suppose its kube-state-metrics then you can also filter  curl ip:port/metrics 
+
+
+kubectl run busybox-crash --image=busybox -- /bin/bash -c "exit 1"      this will crash infinit so that we can check restart count
+by firing promql  kube_pod_container_status_restarts_total{namespace="default"}
+
+
+
