@@ -20,7 +20,15 @@ Q10: How would you create dashboard?
 from dashboard UI i will click create-dashboard ____add a new panel__select prometheous as data source__write promql query__& customize visualization
 #panels is nothing but a visual componant like graphs,tables and alerts.
 
-Q11: what are the common metrics you have scrap
+Q11: what are the common metrics you have scrap?
+
+EKS:                                                                   Jenkins
+kube_pod_container_status_running                                      jenkins_job_last_build_duration_seconds                                                                     
+kube_deployment_status_replicas                                        jenkins_job_last_build_result
+container_cpu_usage_seconds_total                                      jenkins_executor_count
+                                                                       node_cpu_seconds_total
+                                                                       node_memory_MemTotal_bytes       totalmemory
+                                                                       node_memory_MemAvailable_bytes    available
 
 Q12: how would you implement alert-manager
 
