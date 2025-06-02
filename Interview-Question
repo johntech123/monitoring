@@ -1,1 +1,39 @@
+Q1: architecture of prometheous
+
+Q2: How does the push-gateway works and in what scenario is it useful
+
+Q3: What is promql give me some example query?
+
+Q4: What is exporter? common exporter?
+
+Q5: What is grafana and data source?
+
+Q6: What is service discovery? How does it work?
+
+Q7: what is custom metrics how do you implememnt it?
+
+Q8: what is lebal & relable in prometheous.yaml
+
+Q9: what is prometheous.yaml config file
+
+Q10: How would you create dashboard?
+from dashboard UI i will click create-dashboard ____add a new panel__select prometheous as data source__write promql query__& customize visualization
+#panels is nothing but a visual componant like graphs,tables and alerts.
+
+Q11: what are the common metrics you have scrap
+
+Q12: how would you implement alert-manager
+
+Q13: difference between counter, guage and histograms in prometheous?
+counter: a metrics that only increases (eg number of https requests)
+guage: a metrics that can increase or decrease (eg memory ussage)
+
+Q14: How do you monitor custom application with prometheous?
+first instrument code with client librarary (Go, Python, Java)
+expose a /metrics endpoint
+configure prometheous to scrap the endpoint
+
+Q15: How do you scrap multiple targets in prometheous?
+we have to define multiple jobs in promethous.yaml
+or you can have service discovery.
 
