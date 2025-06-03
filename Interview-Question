@@ -40,6 +40,70 @@ dashboards
 Q6: What is service discovery? How does it work?
 Service Discovery besically help Prometheus to automatically find the services, pods, or targets they need to monitor — without manually listing each one.
 Instead of hardcoding IPs or port or modifying prometheous.yaml, Prometheus uses service discovery to dynamically detect and scrape metrics from new services as they come and go.
+so lets say developer instrument the code and expose metrics at /metrics endpoint
+now as part of service discovery first we will deploy the app with correct labels
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  labels:
+    app: my-app             # 👈 This label identifies the app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app           
+  template:
+    metadata:
+      labels:
+        app: my-app         
+    spec:
+      containers:
+        - name: my-app
+          image: my-app:latest
+          ports:
+            - name: http    # 👈 This name will be referenced in the Service and ServiceMonitor
+              containerPort: 8080
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+  labels:
+    app: my-app              # 👈 This label must match ServiceMonitor's selector.matchLabels
+spec:
+  selector:
+    app: my-app              # 👈 This must match Pod labels from the Deployment
+  ports:
+    - name: http             # 👈 This port name must match the one in ServiceMonitor 'port'
+      port: 8080
+      targetPort: http       # 👈 Uses the containerPort name from Deployment
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-app-servicemonitor
+  namespace: monitoring       # 👈 Where Prometheus and Operator are deployed
+  labels:
+    release: prometheus       # ✅ REQUIRED: Matches Prometheus CR's selector
+spec:
+  selector:
+    matchLabels:
+      app: my-app             # 👈 Matches the label on the Service
+  namespaceSelector:
+    matchNames:
+      - default               # 👈 Namespace where your app and Service are deployed
+  endpoints:
+    - port: http              # 👈 Must match the port name in the Service
+      path: /metrics          # 👈 Path exposed by your app
+      interval: 30s
+
+
+
+
+
 
 
 
