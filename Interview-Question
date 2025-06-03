@@ -145,7 +145,8 @@ container_cpu_usage_seconds_total                                      jenkins_e
                                                                        node_memory_MemTotal_bytes       totalmemory
                                                                        node_memory_MemAvailable_bytes    available
 
-Q12: how would you implement alert-manager
+Q12: how would you implement alert-manager?
+
 
 Q13: difference between counter, guage and histograms in prometheous?
 counter: a metrics that only increases (eg number of https requests)
