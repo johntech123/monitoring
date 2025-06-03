@@ -165,3 +165,91 @@ Q16: diffrence between serviceMonitor & podMonitor?
 🛠️ ServiceMonitor: Used to tell Prometheus to scrape metrics from Kubernetes Services.    eg: node exporter(deamonset) or custom metrics
 📦 PodMonitor: Used to scrape metrics directly from Pods, especially useful if there's no Service in front of them.     eg: sidecar container or short-lived pods
 
+
+Q12: how would you implement alert-manager?
+
+first create alerts.yaml
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: custom-alert-rules
+  namespace: monitoring
+  labels:
+    release: monitoring # if you installed through then you've to mention the release name of helm, otherwise prometheus will not recognize it
+spec:
+  groups:
+  - name: custom.rules
+    rules:
+    - alert: HighCpuUsage
+      expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 50
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage on instance {{ $labels.instance }}"
+        description: "CPU usage is above 50% (current value: {{ $value }}%)"
+    - alert: PodRestart
+      expr: kube_pod_container_status_restarts_total > 2
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod restart detected in namespace {{ $labels.namespace }}"
+        description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times"
+
+
+then create ssecret for email
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: slack-webhook
+  namespace: monitoring
+type: Opaque
+stringData:
+  webhook: "https://hooks.slack.com/services/T000/B000/XXXX"  # 👈 Replace with your real webhook URL
+
+
+
+finally
+create alertmanagerconfig.yaml
+
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: slack-alert-config
+  namespace: monitoring
+  labels:
+    release: monitoring   # Must match alertmanagerConfigSelector in Prometheus
+spec:
+  route:
+    receiver: 'null'       # Default receiver
+    repeatInterval: 30m
+    routes:
+      - matchers:
+          - name: alertname
+            value: HighCpuUsage
+        receiver: 'send-slack'
+      - matchers:
+          - name: alertname
+            value: PodRestart
+        receiver: 'send-slack'
+        repeatInterval: 5m
+
+  receivers:
+    - name: 'send-slack'
+      slackConfigs:
+        - channel: '#alerts'                        # 👈 your Slack channel
+          sendResolved: true
+          username: 'prometheus-alert'
+          title: '{{ .CommonAnnotations.summary }}'
+          text: '{{ .CommonAnnotations.description }}'
+          apiURL:
+            name: slack-webhook
+            key: webhook
+    - name: 'null'
+
+
+
+
