@@ -1,14 +1,47 @@
 Q1: architecture of prometheous
 
-Q2: How does the push-gateway works and in what scenario is it useful
+Q2: How does the push-gateway works and in what scenario is it useful?
+The Pushgateway is used when we have short-lived jobs — like scripts or cron jobs — that start, finish, and exit quickly.
+Since Prometheus scrapes metrics at fixed intervals, it may miss these short-lived jobs, because they’re gone before Prometheus checks.
+So instead, these jobs push their metrics to the Pushgateway right before they finish.
+Then, Prometheus scrapes the Pushgateway every minute (or whatever the interval is), and collects those metrics.
+
 
 Q3: What is promql give me some example query?
+PromQL is the query language used to interact with the Prometheus HTTP server. It allows you to retrieve, filter, and aggregate time-series data.
+
+With PromQL, you can:
+🔍 Query metrics based on labels (e.g. method="GET")
+📆 Define a time range for your data (like last 5 minutes or 1 hour)
+📊 Aggregate data (e.g. sum, avg, rate)
+📈 Visualize results as graphs (e.g. in Prometheus UI or Grafana)
+
 
 Q4: What is exporter? common exporter?
+exporter is a small program that collects matrix from a system or application and makes them available in a format that prometheus can understand.
+we can have n number of exporter but each exporter will be responsible for specific system,service,node 
+like for node matrix = node exporter
+like for k8s matrix =  kube-state-matrix >> give info about pod health,pod restart,memory,cpu,how many configmap is created,how many secrets,deployment status
+similarly we can have so many exporter for specific matrix,we can also have custom matrix
+##point  prometheus cannot directly scrap the matrix from system but it rely on exporter (middleman) which collects matrix and expose them via http endpoint(usually /matrix)
+and finally prometheus scrap matrix from here
+
 
 Q5: What is grafana and data source?
+Grafana is an open-source data visualization and dashboard tool.
+it allow you to Create dashboards with charts, graphs, and alerts,
+Visualize metrics from tools like Prometheus.
+It's mainly used in monitoring setups to turn raw metrics into readable visuals.
+
+A Data Source is where Grafana gets the data from.Grafana itself doesn’t store any data— it connects to a Data Source (like Prometheus),fetches the data, and then shows it in
+dashboards
+
 
 Q6: What is service discovery? How does it work?
+Service Discovery besically help Prometheus to automatically find the services, pods, or targets they need to monitor — without manually listing each one.
+Instead of hardcoding IPs or port or modifying prometheous.yaml, Prometheus uses service discovery to dynamically detect and scrape metrics from new services as they come and go.
+
+
 
 Q7: what is custom metrics how do you implememnt it?
 
@@ -44,4 +77,8 @@ configure prometheous to scrap the endpoint
 Q15: How do you scrap multiple targets in prometheous?
 we have to define multiple jobs in promethous.yaml
 or you can have service discovery.
+
+Q16: diffrence between serviceMonitor & podMonitor?
+🛠️ ServiceMonitor: Used to tell Prometheus to scrape metrics from Kubernetes Services.    eg: node exporter(deamonset) or custom metrics
+📦 PodMonitor: Used to scrape metrics directly from Pods, especially useful if there's no Service in front of them.     eg: sidecar container or short-lived pods
 
