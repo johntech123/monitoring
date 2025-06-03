@@ -101,17 +101,35 @@ spec:
       interval: 30s
 
 
-
-
-
-
+When using the Prometheus Operator (with ServiceMonitor or PodMonitor), it:
+Converts your ServiceMonitor CR into internal Prometheus scrape_configs
+Automatically generates the necessary relabel_configs behind the scenes
 
 
 Q7: what is custom metrics how do you implememnt it?
+we have discussed above 
+Custom metrics are application-specific metrics that you define and expose in your code.
+They help you monitor business logic, app behavior, or domain-specific events — things you can’t get from system-level metrics alone.
+❗ Unlike default metrics (like CPU or memory), custom metrics are unique to your app — and you control what they measure
+
+Metric Name	What It Tracks
+http_requests_total	Total number of HTTP requests
+http_request_duration_seconds	Duration of HTTP requests (histogram)
+user_signup_total	How many users signed up
+order_processing_failures	Number of failed order processes
 
 Q8: what is lebal & relable in prometheous.yaml
+   we dont need it as we using servicemonitor and podmonitor
 
-Q9: what is prometheous.yaml config file
+Q9: what is prometheous.yaml config file.
+📄 prometheus.yaml is the main configuration file for Prometheus.
+It tells Prometheus:
+Where to scrape metrics from
+How often to scrape
+Which labels to apply
+service discovery
+How to alert
+
 
 Q10: How would you create dashboard?
 from dashboard UI i will click create-dashboard ____add a new panel__select prometheous as data source__write promql query__& customize visualization
