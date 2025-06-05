@@ -246,9 +246,14 @@ spec:
           title: '{{ .CommonAnnotations.summary }}'
           text: '{{ .CommonAnnotations.description }}'
           apiURL:
-            name: slack-webhook
+            name: slack-webhook          from secret
             key: webhook
     - name: 'null'
+
+
+"Yes, I have set up Alertmanager. We created Prometheus alert rules for CPU usage, memory, pod restarts, deployment status, and PVC issues.
+Then, we created a Slack webhook and stored it in a Kubernetes Secret. Finally, we configured Alertmanager to use that webhook in the receiver section, 
+so alerts are sent directly to Slack.
 
 
 
