@@ -13,3 +13,68 @@ install kibana with helm
 then finally
 
 install fluentbit with helm provide the secret here of elastic search bcz it needs to be authenticate with es to forward the logs
+
+
+
+
+EFK on vm
+
+first install dependencies
+then install elastic search
+modify
+sudo nano /etc/elasticsearch/elasticsearch.yml
+network.host: 0.0.0.0   bcz by defsoult it expose on local host 0.0.0.0 means everywhere
+discovery.type: single-node   add this in descovery block
+sudo systemctl restart es
+
+then 
+install kibana
+sudo apt install -y kibana
+sudo nano /etc/kibana/kibana.yml
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://localhost:9200"]
+sudo systemctl enable kibana
+sudo systemctl start kibana
+http://<EC2-PUBLIC-IP>:5601                       make sure to allow inbound rule as 5601,9200
+
+finally 
+install fluentbit
+
+curl -s https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
+echo "deb https://packages.fluentbit.io/ubuntu/focal focal main" | sudo tee /etc/apt/sources.list.d/fluentbit.list
+sudo apt update
+sudo apt install -y fluent-bit
+
+sudo nano /etc/fluent-bit/fluent-bit.conf
+[SERVICE]
+    Flush        5
+    Daemon       Off
+    Log_Level    info
+
+[INPUT]
+    Name          tail
+    Path          /var/log/syslog
+    Parser        syslog
+    Tag           syslog
+
+[OUTPUT]
+    Name          es
+    Match         *
+    Host          127.0.0.1
+    Port          9200
+    Index         fluentbit
+    Logstash_Format On
+
+sudo systemctl daemon-reload
+sudo systemctl restart fluent-bit
+sudo systemctl status fluent-bit
+
+jenkins master slave architecture
+install es and kibana in dedicated vm seprately and install fluentbit in each node 
+modify fluentbit properly input, output and filter
+
+
+go to kibana http://<EC2-PUBLIC-IP>:5601
+discover> create index> give name logstash-* thats it
+
+
