@@ -1,0 +1,209 @@
+first install CRD
+kubectl create -f https://download.elastic.co/downloads/eck/3.3.0/crds.yaml
+Then,
+kubectl apply -f https://download.elastic.co/downloads/eck/3.3.0/operator.yaml
+above one will be same across all the project but only work within cluster
+now we will right custom-resource (CR)
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch-cluster
+  namespace: eck
+spec:
+  version: 9.0.3
+  # Single master node
+  nodeSets:
+  - name: master
+    count: 1
+    config:
+      node.roles: ["master", "remote_cluster_client"]
+      xpack.ml.enabled: true
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: gp3
+    podTemplate:
+      spec:
+        automountServiceAccountToken: true
+        serviceAccountName: es-s3-sa
+        containers:
+        - name: elasticsearch
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 500m
+            limits:
+              memory: 2Gi
+              cpu: 1
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms1g -Xmx1g
+          - name: AWS_WEB_IDENTITY_TOKEN_FILE
+            value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+          - name: AWS_ROLE_ARN
+            value: "arn:aws:iam::<account-id>:role/production-elasticsearch-service-role"
+          volumeMounts:
+          - name: aws-iam-token
+            mountPath: /usr/share/elasticsearch/config/repository-s3
+        volumes:
+        - name: aws-iam-token
+          projected:
+            sources:
+            - serviceAccountToken:
+                audience: sts.amazonaws.com
+                expirationSeconds: 86400
+                path: aws-web-identity-token-file
+        nodeSelector:
+          kubernetes.io/os: linux
+  
+  # Hot tier nodes
+  - name: hot
+    count: 1
+    config:
+      node.roles: ["data_hot", "data_content", "ingest", "remote_cluster_client"]
+      node.attr.data: hot
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+        storageClassName: gp3  # Use gp3 for better performance if available
+    podTemplate:
+      spec:
+        automountServiceAccountToken: true
+        serviceAccountName: es-s3-sa
+        containers:
+        - name: elasticsearch
+          resources:
+            requests:
+              memory: 2Gi
+              cpu: 1
+            limits:
+              memory: 4Gi
+              cpu: 2
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms2g -Xmx2g
+          - name: AWS_WEB_IDENTITY_TOKEN_FILE
+            value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+          - name: AWS_ROLE_ARN
+            value: "arn:aws:iam::<account-id>:role/production-elasticsearch-service-role"
+          volumeMounts:
+          - name: aws-iam-token
+            mountPath: /usr/share/elasticsearch/config/repository-s3
+        volumes:
+        - name: aws-iam-token
+          projected:
+            sources:
+            - serviceAccountToken:
+                audience: sts.amazonaws.com
+                expirationSeconds: 86400
+                path: aws-web-identity-token-file
+        nodeSelector:
+          kubernetes.io/os: linux
+
+  # Frozen tier nodes
+  - name: frozen
+    count: 1
+    config:
+      node.roles: ["data_frozen", "remote_cluster_client"]
+      node.attr.data: frozen
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+        storageClassName: gp3
+    podTemplate:
+      spec:
+        automountServiceAccountToken: true
+        serviceAccountName: es-s3-sa
+        containers:
+        - name: elasticsearch
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 1
+            limits:
+              memory: 2Gi
+              cpu: 2
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms1g -Xmx1g
+          - name: AWS_WEB_IDENTITY_TOKEN_FILE
+            value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+          - name: AWS_ROLE_ARN
+            value: "arn:aws:iam::<account id>:role/production-elasticsearch-service-role"
+          volumeMounts:
+          - name: aws-iam-token
+            mountPath: /usr/share/elasticsearch/config/repository-s3
+        volumes:
+        - name: aws-iam-token
+          projected:
+            sources:
+            - serviceAccountToken:
+                audience: sts.amazonaws.com
+                expirationSeconds: 86400
+                path: aws-web-identity-token-file
+        nodeSelector:
+          kubernetes.io/os: linux
+
+  http:
+    service:
+      spec:
+        type: ClusterIP
+    tls:
+      selfSignedCertificate:
+        disabled: f
+
+---------
+# kibana.yaml
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+  namespace: eck
+spec:
+  version: 9.0.3
+  count: 1
+  elasticsearchRef:
+    name: elasticsearch-cluster
+  http:
+    service:
+      spec:
+        type: ClusterIP
+    tls:
+      selfSignedCertificate:
+        disabled: false
+  podTemplate:
+    spec:
+      containers:
+      - name: kibana
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 0.5
+          limits:
+            memory: 2Gi
+            cpu: 2
+        env:
+        - name: NODE_OPTIONS
+          value: "--max-old-space-size=1800"
+      nodeSelector:
+        kubernetes.io/os: linux
+
+now secret , volume and pv pvc is managed by eck
